@@ -7,7 +7,7 @@ Last update on July 18, 2015
 @author: Femto Trader
 '''
 import pandas as pd
-
+import numpy as np
 
 class Columns(object):
     OPEN='Open'
@@ -461,4 +461,26 @@ def STDDEV(df, n):
     Standard Deviation
     """
     result = pd.Series(pd.rolling_std(df['Close'], n), name='STD_' + str(n))
+    return out(SETTINGS, df, result)
+
+def HHLL(df, n):
+    """
+    Highest High/Lowest Low
+    """
+    high = df['High'].values
+    low = df['Low'].values
+    vector_size = high.shape[0]
+    lowest_low_vect= np.zeros(vector_size)
+    lowest_low_vect[0:n] = min(low[0:n])
+    for i in range((n-1), vector_size):
+        lowest_low_vect[i] = min(low[(i-n+1):i+1])
+    highest_high_vect = np.zeros(vector_size)
+    highest_high_vect[0:n] = max(high[0:n])
+    for i in range((n-1), vector_size):
+        highest_high_vect[i] = max(high[(i-n+1):i+1])
+    mid_vect = (highest_high_vect + lowest_low_vect) / 2
+    lowest_series = pd.Series(lowest_low_vect, name='Lowest low' + str(n))
+    highest_series = pd.Series(highest_high_vect, name='Highest high' + str(n))
+    mid_series = pd.Series(mid_vect, name='Midpoint' + str(n))
+    result = pd.DataFrame([lowest_series, highest_series, mid_series]).transpose()
     return out(SETTINGS, df, result)
